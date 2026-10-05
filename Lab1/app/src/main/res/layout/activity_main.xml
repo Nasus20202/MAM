@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/playbackLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="Playback"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/openFileButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="Open file"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playbackLabel" />
+
+    <TextView
+        android:id="@+id/openedFileLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:text=" "
+        app:layout_constraintBottom_toBottomOf="@+id/openFileButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/openFileButton"
+        app:layout_constraintTop_toTopOf="@+id/openFileButton" />
+
+    <LinearLayout
+        android:id="@+id/playbackButtonsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/openFileButton">
+
+        <ImageButton
+            android:id="@+id/playButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            app:srcCompat="@android:drawable/ic_media_play" />
+
+        <ImageButton
+            android:id="@+id/pauseButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="8dp"
+            app:srcCompat="@android:drawable/ic_media_pause" />
+
+        <ImageButton
+            android:id="@+id/stopButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            app:srcCompat="@android:drawable/alert_light_frame" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/recordingLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Recording"
+        app:layout_constraintStart_toStartOf="@+id/playbackLabel"
+        app:layout_constraintTop_toBottomOf="@+id/playbackButtonsLayout" />
+
+    <Button
+        android:id="@+id/setDestinationButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Set destination"
+        app:layout_constraintStart_toStartOf="@+id/openFileButton"
+        app:layout_constraintTop_toBottomOf="@+id/recordingLabel" />
+
+    <TextView
+        android:id="@+id/destinationFileLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:text=" "
+        app:layout_constraintBottom_toBottomOf="@+id/setDestinationButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/setDestinationButton"
+        app:layout_constraintTop_toTopOf="@+id/setDestinationButton" />
+
+    <LinearLayout
+        android:id="@+id/recordingButtonsLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/setDestinationButton">
+
+        <ImageButton
+            android:id="@+id/startRecordingButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="8dp"
+            app:srcCompat="@android:drawable/ic_notification_overlay" />
+
+        <ImageButton
+            android:id="@+id/stopRecordingButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginHorizontal="8dp"
+            app:srcCompat="@android:drawable/ic_delete" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
