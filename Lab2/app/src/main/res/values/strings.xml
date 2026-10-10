@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Lab 2</string>
+    <string name="compass">Compass pointing towards magnetic north</string>
+</resources>
