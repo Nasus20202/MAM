@@ -14,21 +14,15 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
+    private lateinit var sensorTextView: TextView
+    private lateinit var compassImageView: ImageView
+
     private lateinit var sensorManager: SensorManager
     private var magneticSensor: Sensor? = null
     private var gravitySensor: Sensor? = null
 
-    private lateinit var sensorTextView: TextView
-    private lateinit var compassImageView: ImageView
-
     private var magneticValues: FloatArray? = FloatArray(3)
     private var gravityValues: FloatArray? = FloatArray(3)
-    private var hasMagnetic = false
-    private var hasGravity = false
-
-    private val rotationMatrix = FloatArray(9)
-    private val remappedRotationMatrix = FloatArray(9)
-    private val orientation = FloatArray(3)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,19 +38,20 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         compassImageView = findViewById(R.id.compassImageView)
         sensorTextView.text = "Awaiting sensor data"
 
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
-        gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
-
-        if (magneticSensor == null || gravitySensor == null) {
-            sensorTextView.text = "Required sensors (magnetometer, gravity) are not available"
-        }
+        sensorManager = getSystemService(Context.SENSOR_SERVICE)
+                as SensorManager
+        magneticSensor =
+            sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+        gravitySensor =
+            sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
     }
 
     override fun onResume() {
         super.onResume()
-        sensorManager.registerListener(this, magneticSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        sensorManager.registerListener(this, gravitySensor, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, magneticSensor,
+            SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, gravitySensor,
+            SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     override fun onPause() {
@@ -68,46 +63,42 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         when (event?.sensor?.type) {
             Sensor.TYPE_MAGNETIC_FIELD -> {
                 magneticValues = event.values.clone()
-                hasMagnetic = true
             }
             Sensor.TYPE_GRAVITY -> {
                 gravityValues = event.values.clone()
-                hasGravity = true
             }
-            else -> return
         }
-        updateText()
-        updateCompass()
+        updateSensorText()
+        updateCompassRotation()
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int)
+    { }
 
-    private fun updateText() {
+    fun updateSensorText() {
         val m = magneticValues ?: return
         val g = gravityValues ?: return
         sensorTextView.text = String.format(
-            "Magnetic field (µT):\n  x=%.2f  y=%.2f  z=%.2f\nGravity (m/s²):\n  x=%.2f  y=%.2f  z=%.2f",
+            "Magnetic field:  x=%.2f  y=%.2f  z=%.2f\nGravity: x=%.2f  y=%.2f  z=%.2f",
             m[0], m[1], m[2], g[0], g[1], g[2]
         )
     }
 
-    private fun updateCompass() {
-        if (!hasMagnetic || !hasGravity) return
-        val gravity = gravityValues ?: return
-        val magnetic = magneticValues ?: return
-
-        if (!SensorManager.getRotationMatrix(rotationMatrix, null, gravity, magnetic)) return
-        // Remap so that the compass works with the device held upright (camera pointing forward).
+    fun updateCompassRotation() {
+        val rotationMatrix = FloatArray(9)
+        val rotationMatrix2 = FloatArray(9)
+        val orientation = FloatArray(3)
+        SensorManager.getRotationMatrix(
+            rotationMatrix,null, gravityValues, magneticValues
+        )
         SensorManager.remapCoordinateSystem(
             rotationMatrix,
             SensorManager.AXIS_X,
             SensorManager.AXIS_Z,
-            remappedRotationMatrix
+            rotationMatrix2
         )
-        SensorManager.getOrientation(remappedRotationMatrix, orientation)
-
-        val azimuthDegrees = Math.toDegrees(orientation[0].toDouble()).toFloat()
-        // The needle must counter-rotate by the azimuth to keep pointing at magnetic north.
-        compassImageView.rotation = -azimuthDegrees
+        SensorManager.getOrientation(rotationMatrix2, orientation)
+        val degrees = Math.toDegrees(orientation[0].toDouble())
+        compassImageView.rotation = -degrees.toFloat()
     }
 }
