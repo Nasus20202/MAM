@@ -2,6 +2,7 @@ package dev.nasuta.mam.lab3
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +22,7 @@ import com.google.ar.core.Frame
 import com.google.ar.core.Plane
 import com.google.ar.core.Pose
 import com.google.ar.core.Session
+import com.google.ar.core.exceptions.NotYetAvailableException
 import io.github.sceneview.ar.ARSceneView
 import io.github.sceneview.ar.arcore.createAnchorOrNull
 import io.github.sceneview.ar.arcore.getUpdatedPlanes
@@ -32,6 +34,7 @@ import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.CubeNode
 import io.github.sceneview.node.ModelNode
+import java.nio.ByteOrder
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -42,12 +45,16 @@ private const val HOVER_AMPLITUDE = 0.05f // meters
 private const val HOVER_HEIGHT = 0.1f // meters above the plane
 private const val HOVER_SPEED = 2f // radians per second
 private const val TRAVEL_SPEED = 0.4f // meters per second
+private const val MAX_DEPTH_MM = 5000 // depth values beyond this are drawn as white
 
 class MainActivity : AppCompatActivity() {
     private lateinit var sceneView: ARSceneView
     private var lastFrame: Frame? = null
     private var anchorNodes = mutableListOf<AnchorNode>()
+    private lateinit var depthView: CustomView
     private var modelNode: ModelNode? = null
+    private var depthBitmap: Bitmap? = null
+    private var depthPixels: IntArray? = null
 
     // Animation state
     private var animationAngle = 0f
@@ -84,6 +91,7 @@ class MainActivity : AppCompatActivity() {
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         }
 
+        depthView = findViewById(R.id.depthView)
         sceneView = findViewById<ARSceneView>(R.id.sceneView).apply {
             planeRenderer.isEnabled = true
             configureSession { session, config ->
@@ -117,6 +125,42 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateAnimation(frame.timestamp)
+        updateDepthView(frame)
+    }
+
+    private fun updateDepthView(frame: Frame) {
+        try {
+            frame.acquireDepthImage16Bits().use { depthImage ->
+                val width = depthImage.width
+                val height = depthImage.height
+                val plane = depthImage.planes[0]
+                val buffer = plane.buffer.order(ByteOrder.nativeOrder())
+
+                // The depth image is landscape, so the bitmap is rotated to match portrait mode
+                val bitmap = depthBitmap?.takeIf { it.width == height && it.height == width }
+                    ?: Bitmap.createBitmap(height, width, Bitmap.Config.ARGB_8888).also {
+                        depthBitmap = it
+                        depthPixels = IntArray(width * height)
+                    }
+                val pixels = depthPixels ?: return
+
+                for (xx in 0..<width) {
+                    for (yy in 0..<height) {
+                        val index = xx * plane.pixelStride + yy * plane.rowStride
+                        // Depth in millimeters, 0 means no data
+                        val depthValue = buffer.getShort(index).toInt() and 0xFFFF
+                        val gray = if (depthValue == 0) 0
+                        else 255 - (depthValue.coerceAtMost(MAX_DEPTH_MM) * 255 / MAX_DEPTH_MM)
+                        pixels[xx * height + (height - 1 - yy)] = Color.rgb(gray, gray, gray)
+                    }
+                }
+                bitmap.setPixels(pixels, 0, height, 0, 0, height, width)
+                depthView.bitmap = bitmap
+                depthView.postInvalidate()
+            }
+        } catch (e: NotYetAvailableException) {
+            // Depth image is not available during the first frames
+        }
     }
 
     private fun updateAnimation(timestampNanos: Long) {
