@@ -40,12 +40,12 @@ import kotlin.math.sqrt
 
 const val ufoModelFile = "models/ufo.glb"
 
-private const val ROTATION_SPEED_DEG = 90f // degrees per second
-private const val HOVER_AMPLITUDE = 0.05f // meters
-private const val HOVER_HEIGHT = 0.1f // meters above the plane
-private const val HOVER_SPEED = 2f // radians per second
-private const val TRAVEL_SPEED = 0.4f // meters per second
-private const val MAX_DEPTH_MM = 5000 // depth values beyond this are drawn as white
+private const val ROTATION_SPEED_DEG = 90f
+private const val HOVER_AMPLITUDE = 0.05f
+private const val HOVER_HEIGHT = 0.1f
+private const val HOVER_SPEED = 2f
+private const val TRAVEL_SPEED = 0.4f
+private const val MAX_DEPTH_MM = 5000
 
 class MainActivity : AppCompatActivity() {
     private lateinit var sceneView: ARSceneView
@@ -56,11 +56,9 @@ class MainActivity : AppCompatActivity() {
     private var depthBitmap: Bitmap? = null
     private var depthPixels: IntArray? = null
 
-    // Animation state
     private var animationAngle = 0f
     private var lastFrameTimeNanos = 0L
 
-    // Position of the UFO's projection on the plane and the point it is flying to
     private var groundPosition: Position? = null
     private var targetPosition: Position? = null
 
@@ -147,8 +145,8 @@ class MainActivity : AppCompatActivity() {
                 for (xx in 0..<width) {
                     for (yy in 0..<height) {
                         val index = xx * plane.pixelStride + yy * plane.rowStride
-                        // Depth in millimeters, 0 means no data
-                        val depthValue = buffer.getShort(index).toInt() and 0xFFFF
+                        // in mm
+                        val depthValue = buffer.getShort(index).toInt()
                         val gray = if (depthValue == 0) 0
                         else 255 - (depthValue.coerceAtMost(MAX_DEPTH_MM) * 255 / MAX_DEPTH_MM)
                         pixels[xx * height + (height - 1 - yy)] = Color.rgb(gray, gray, gray)
@@ -158,9 +156,7 @@ class MainActivity : AppCompatActivity() {
                 depthView.bitmap = bitmap
                 depthView.postInvalidate()
             }
-        } catch (e: NotYetAvailableException) {
-            // Depth image is not available during the first frames
-        }
+        } catch (e: NotYetAvailableException) { }
     }
 
     private fun updateAnimation(timestampNanos: Long) {
@@ -171,7 +167,7 @@ class MainActivity : AppCompatActivity() {
 
         animationAngle += dt
 
-        // Fly towards the point chosen by the user
+        // Fly
         targetPosition?.let { target ->
             val dx = target.x - ground.x
             val dz = target.z - ground.z
@@ -188,7 +184,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Constant rotation and sinusoidal hovering
+        // Rotation
         val current = groundPosition ?: ground
         model.worldPosition = Position(
             current.x,
