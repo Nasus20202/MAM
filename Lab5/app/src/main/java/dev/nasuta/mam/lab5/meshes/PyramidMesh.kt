@@ -15,8 +15,8 @@ class PyramidMesh : BaseMesh() {
             0.0f, 1.0f, 0.0f,
 
             // Back face
-            -1.0f, -1.0f, -1.0f,
             1.0f, -1.0f, -1.0f,
+            -1.0f, -1.0f, -1.0f,
             0.0f, 1.0f, 0.0f,
 
             // Left face
