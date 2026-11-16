@@ -1,8 +1,9 @@
 package dev.nasuta.mam.lab6.meshes
 
 /**
- * Textured cube.
+ * @author Marek Kulawiak
  */
+
 class TexturedCubeMesh : BaseMesh() {
     init {
         val positionData = floatArrayOf(
@@ -55,8 +56,8 @@ class TexturedCubeMesh : BaseMesh() {
             -1.0f, -1.0f, -1.0f
         )
 
+        // Each face has identical texture coordinates.
         val texCoordData = floatArrayOf(
-            // Front face
             0.0f, 0.0f,
             0.0f, 1.0f,
             1.0f, 0.0f,
@@ -64,7 +65,6 @@ class TexturedCubeMesh : BaseMesh() {
             1.0f, 1.0f,
             1.0f, 0.0f,
 
-            // Right face
             0.0f, 0.0f,
             0.0f, 1.0f,
             1.0f, 0.0f,
@@ -72,7 +72,6 @@ class TexturedCubeMesh : BaseMesh() {
             1.0f, 1.0f,
             1.0f, 0.0f,
 
-            // Back face
             0.0f, 0.0f,
             0.0f, 1.0f,
             1.0f, 0.0f,
@@ -80,7 +79,6 @@ class TexturedCubeMesh : BaseMesh() {
             1.0f, 1.0f,
             1.0f, 0.0f,
 
-            // Left face
             0.0f, 0.0f,
             0.0f, 1.0f,
             1.0f, 0.0f,
@@ -88,7 +86,6 @@ class TexturedCubeMesh : BaseMesh() {
             1.0f, 1.0f,
             1.0f, 0.0f,
 
-            // Top face
             0.0f, 0.0f,
             0.0f, 1.0f,
             1.0f, 0.0f,
@@ -96,7 +93,6 @@ class TexturedCubeMesh : BaseMesh() {
             1.0f, 1.0f,
             1.0f, 0.0f,
 
-            // Bottom face
             0.0f, 0.0f,
             0.0f, 1.0f,
             1.0f, 0.0f,

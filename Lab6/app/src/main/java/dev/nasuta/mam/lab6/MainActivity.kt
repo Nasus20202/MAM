@@ -1,47 +1,70 @@
 package dev.nasuta.mam.lab6
 
 import android.os.Bundle
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
-import android.widget.FrameLayout
 import android.widget.SeekBar
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : AppCompatActivity(), SeekBar.OnSeekBarChangeListener {
-    private lateinit var glSurfaceView: ESSurfaceView
+    private var glSurfaceView: ESSurfaceView? = null
+
+    private var lightBar: SeekBar? = null
+    private var orangeButton: Button? = null
+    private var whiteButton: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        enableEdgeToEdge()
 
         glSurfaceView = ESSurfaceView(this)
-        findViewById<FrameLayout>(R.id.containerLayout).addView(glSurfaceView)
 
-        findViewById<SeekBar>(R.id.lightSeekBar).setOnSeekBarChangeListener(this)
-        findViewById<Button>(R.id.lightOrangeButton).setOnClickListener {
-            setLightColour(1f, 0.5f, 0f)
-        }
-        findViewById<Button>(R.id.lightWhiteButton).setOnClickListener {
-            setLightColour(1f, 1f, 1f)
-        }
-    }
+        // GUI initialization
+        setContentView(R.layout.activity_main)
+        val tempView = findViewById<View>(R.id.tempView)
+        val parent = tempView.parent as ViewGroup
+        val index = parent.indexOfChild(tempView)
+        parent.removeView(tempView)
+        parent.addView(glSurfaceView, index)
 
-    private fun setLightColour(r: Float, g: Float, b: Float) {
-        glSurfaceView.renderer.lightCol = floatArrayOf(r, g, b)
+        // Fullscreen
+        val rootView = findViewById<ConstraintLayout>(R.id.main)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, rootView).let { controller ->
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+
+        lightBar = findViewById(R.id.lightSeekBar)
+        lightBar?.setOnSeekBarChangeListener(this)
+        orangeButton = findViewById(R.id.lightOrangeButton)
+        orangeButton?.setOnClickListener {
+            glSurfaceView?.renderer?.lightCol = floatArrayOf(1f, 0.5f, 0f)
+        }
+        whiteButton = findViewById(R.id.lightWhiteButton)
+        whiteButton?.setOnClickListener {
+            glSurfaceView?.renderer?.lightCol = floatArrayOf(1f, 1f, 1f)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        glSurfaceView.onResume()
+        glSurfaceView?.onResume()
     }
 
     override fun onPause() {
         super.onPause()
-        glSurfaceView.onPause()
+        glSurfaceView?.onPause()
     }
 
-    // The seek bar moves the light along the X axis (range <-5, 5>).
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        glSurfaceView.renderer.lightPos = floatArrayOf((progress - 50) / 10f, 2f, 1f)
+        glSurfaceView?.renderer?.lightPos = floatArrayOf((progress - 50) / 10f, 2f, 1f)
     }
 
     override fun onStartTrackingTouch(seekBar: SeekBar?) {}

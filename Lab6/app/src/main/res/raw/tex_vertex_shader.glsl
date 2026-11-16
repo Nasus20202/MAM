@@ -17,7 +17,6 @@ void main()
     // Pass texture coordinate to the fragment shader.
     interpolatedTexCoord = vertexTexCoord;
 
-    // Vertex position and normal passed on for lighting.
     interpolatedPosition = vec3(MVMatrix * vertexPosition);
     interpolatedNormal = vec3(MVMatrix * vec4(vertexNormal, 0.0));
 

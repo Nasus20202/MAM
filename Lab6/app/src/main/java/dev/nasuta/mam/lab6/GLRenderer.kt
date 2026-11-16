@@ -10,13 +10,15 @@ import android.util.Log
 import dev.nasuta.mam.lab6.meshes.CubeMesh
 import dev.nasuta.mam.lab6.meshes.PyramidMesh
 import dev.nasuta.mam.lab6.meshes.TexturedCubeMesh
-import dev.nasuta.mam.lab6.meshes.TexturedQuadMesh
 import dev.nasuta.mam.lab6.shaders.ShaderProgram
 import java.nio.FloatBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.tan
 
+/**
+ * @author Marek Kulawiak
+ */
 class GLRenderer : GLSurfaceView.Renderer {
     private var modelMatrix: FloatArray = FloatArray(16)
     private var viewMatrix: FloatArray = FloatArray(16)
@@ -37,28 +39,23 @@ class GLRenderer : GLSurfaceView.Renderer {
         0f, 1f, 0f  // "up vector"
     )
 
-    // Scene light, modified from the GUI.
     var lightPos: FloatArray = floatArrayOf(0f, 2f, 1f)
     var lightCol: FloatArray = floatArrayOf(1f, 1f, 1f)
 
     private var colShaders: ShaderProgram? = null
     private var texShaders: ShaderProgram? = null
-    private var particleShaders: ShaderProgram? = null
 
     private var appContext: Context? = null
 
     // 3D models.
     private var texturedCubeMesh: TexturedCubeMesh = TexturedCubeMesh()
     private var pyramidMesh: PyramidMesh = PyramidMesh()
-    private var colouredCubeMesh: CubeMesh = CubeMesh()
-    private var quadMesh: TexturedQuadMesh = TexturedQuadMesh()
+    private var cubeMesh: CubeMesh = CubeMesh()
 
     // Texture handles.
     private var crateTextureDataHandle: Int = 0
     private var stoneTextureDataHandle: Int = 0
-    private var particleTextureDataHandle: Int = 0
 
-    // Current rotation angle of the meshes (in degrees).
     private var angle: Float = 0f
 
     // Graphical context initialization.
@@ -71,9 +68,8 @@ class GLRenderer : GLSurfaceView.Renderer {
         GLES20.glDepthFunc(GLES20.GL_LEQUAL)
         GLES20.glDepthMask(true)
 
-        crateTextureDataHandle = readTexture(R.drawable.crate)
-        stoneTextureDataHandle = readTexture(R.drawable.stone)
-        particleTextureDataHandle = readTexture(R.drawable.particle)
+        crateTextureDataHandle = readTexture(R.drawable.crate_borysses_deviantart_com)
+        stoneTextureDataHandle = readTexture(R.drawable.stone_agf81_deviantart_com)
 
         // Create shaders used for visualizing vertex colors of meshes.
         colShaders = ShaderProgram()
@@ -82,7 +78,7 @@ class GLRenderer : GLSurfaceView.Renderer {
             R.raw.col_vertex_shader,
             R.raw.col_fragment_shader,
             colShadersAttributes,
-            appContext!!,
+            appContext,
             "colors"
         )
 
@@ -93,18 +89,8 @@ class GLRenderer : GLSurfaceView.Renderer {
             R.raw.tex_vertex_shader,
             R.raw.tex_fragment_shader,
             texShadersAttributes,
-            appContext!!,
+            appContext,
             "textures"
-        )
-
-        // Particle shaders reuse the texture vertex shader.
-        particleShaders = ShaderProgram()
-        particleShaders?.init(
-            R.raw.tex_vertex_shader,
-            R.raw.particle_fragment_shader,
-            texShadersAttributes,
-            appContext!!,
-            "particles"
         )
     }
 
@@ -132,7 +118,6 @@ class GLRenderer : GLSurfaceView.Renderer {
         // Clear buffers.
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT or GLES20.GL_COLOR_BUFFER_BIT)
 
-        // Update the rotation.
         angle += 1f
 
         // Camera setup.
@@ -146,24 +131,19 @@ class GLRenderer : GLSurfaceView.Renderer {
         // Transform and render meshes.
         GLES20.glUseProgram(texShaders!!.programHandle) // Pick shaders for rendering.
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0) // Configure the texture at index 0.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, crateTextureDataHandle) // Use the crate texture.
         GLES20.glUniform1i(texShaders!!._diffuseTextureHandle, 0) // Assign the texture index (0).
-
-        // Pass the light parameters.
         GLES20.glUniform3f(texShaders!!._lightPosHandle, lightPos[0], lightPos[1], lightPos[2])
         GLES20.glUniform4f(texShaders!!._lightColHandle, lightCol[0], lightCol[1], lightCol[2], 1f)
-
-        // Rotating cube.
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, crateTextureDataHandle) // Use the crate texture.
         Matrix.setIdentityM(modelMatrix, 0) // Reset all model transformations.
         Matrix.translateM(modelMatrix, 0, -2.0f, -1.0f, -3.0f) // Move the model.
-        Matrix.rotateM(modelMatrix, 0, angle, 1.0f, 1.0f, 0.0f) // Rotate the model.
+        Matrix.rotateM(modelMatrix, 0, angle, 1.0f, 1.0f, 0.0f)
         drawShape(
             texturedCubeMesh.positionBuffer, null, texturedCubeMesh.normalBuffer,
             texturedCubeMesh.texCoordsBuffer, texShaders, texturedCubeMesh.numberOfVertices
         )
 
-        // Rotating pyramid.
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, stoneTextureDataHandle) // Use the stone texture.
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, stoneTextureDataHandle)
         Matrix.setIdentityM(modelMatrix, 0)
         Matrix.translateM(modelMatrix, 0, 2.0f, -1.0f, -3.0f)
         Matrix.rotateM(modelMatrix, 0, angle, 0.0f, 1.0f, 0.0f)
@@ -172,31 +152,16 @@ class GLRenderer : GLSurfaceView.Renderer {
             pyramidMesh.texCoordsBuffer, texShaders, pyramidMesh.numberOfVertices
         )
 
-        // Semi-transparent coloured cube (alpha blending).
         GLES20.glUseProgram(colShaders!!.programHandle)
         Matrix.setIdentityM(modelMatrix, 0)
         Matrix.translateM(modelMatrix, 0, 0.0f, 1.0f, -3.0f)
         Matrix.rotateM(modelMatrix, 0, angle, 1.0f, 0.0f, 1.0f)
+        // Alpha blending (good for glass-like objects).
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         drawShape(
-            colouredCubeMesh.positionBuffer, colouredCubeMesh.colourBuffer, colouredCubeMesh.normalBuffer,
-            null, colShaders, colouredCubeMesh.numberOfVertices
-        )
-        GLES20.glDisable(GLES20.GL_BLEND)
-
-        // Particle quad in front of the other objects (additive blending).
-        GLES20.glUseProgram(particleShaders!!.programHandle)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, particleTextureDataHandle)
-        GLES20.glUniform1i(particleShaders!!._diffuseTextureHandle, 0)
-        Matrix.setIdentityM(modelMatrix, 0)
-        Matrix.translateM(modelMatrix, 0, 0.0f, 0.0f, -0.5f)
-        Matrix.scaleM(modelMatrix, 0, 0.5f, 0.5f, 0.5f)
-        GLES20.glEnable(GLES20.GL_BLEND)
-        GLES20.glBlendFunc(GLES20.GL_SRC_COLOR, GLES20.GL_ONE)
-        drawShape(
-            quadMesh.positionBuffer, null, quadMesh.normalBuffer,
-            quadMesh.texCoordsBuffer, particleShaders, quadMesh.numberOfVertices
+            cubeMesh.positionBuffer, cubeMesh.colourBuffer, cubeMesh.normalBuffer,
+            null, colShaders, cubeMesh.numberOfVertices
         )
         GLES20.glDisable(GLES20.GL_BLEND)
     }
@@ -238,15 +203,13 @@ class GLRenderer : GLSurfaceView.Renderer {
             GLES20.glEnableVertexAttribArray(shaderProgram._vertexTexCoordHandle)
         }
 
-        // Configure the normal buffer (the handle is -1 if the shaders do not use normals).
-        if (normalBuffer != null && shaderProgram._vertexNormalHandle >= 0) {
-            normalBuffer.position(0)
-            GLES20.glVertexAttribPointer(
-                shaderProgram._vertexNormalHandle, NORMAL_DATA_SIZE, GLES20.GL_FLOAT,
-                false, 0, normalBuffer
-            )
-            GLES20.glEnableVertexAttribArray(shaderProgram._vertexNormalHandle)
-        }
+        // Configure the normal buffer.
+        normalBuffer!!.position(0)
+        GLES20.glVertexAttribPointer(
+            shaderProgram._vertexNormalHandle, NORMAL_DATA_SIZE, GLES20.GL_FLOAT,
+            false, 0, normalBuffer
+        )
+        GLES20.glEnableVertexAttribArray(shaderProgram._vertexNormalHandle)
 
         // Calculate the ModelViewProjection buffer.
         Matrix.multiplyMM(MVMatrix, 0, viewMatrix, 0, modelMatrix, 0)
@@ -265,6 +228,7 @@ class GLRenderer : GLSurfaceView.Renderer {
     }
 
     private fun readTexture(resourceId: Int): Int {
+        Log.d(javaClass.simpleName, "Reading texture.")
         val textureHandle = IntArray(1)
         GLES20.glGenTextures(1, textureHandle, 0)
 
@@ -275,7 +239,12 @@ class GLRenderer : GLSurfaceView.Renderer {
 
         val options = BitmapFactory.Options()
         options.inScaled = false
+
+        if (appContext == null) {
+            Log.e(javaClass.simpleName, "appContext = null")
+        }
         val bitmap = BitmapFactory.decodeResource(appContext!!.resources, resourceId, options)
+        Log.d(javaClass.simpleName, " bitmap resolution: " + bitmap.width + " x " + bitmap.height)
 
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureHandle[0])
         GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR)

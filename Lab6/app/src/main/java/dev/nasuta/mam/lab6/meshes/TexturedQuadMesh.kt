@@ -1,5 +1,9 @@
 package dev.nasuta.mam.lab6.meshes
 
+/**
+ * @author Marek Kulawiak
+ */
+
 class TexturedQuadMesh : BaseMesh() {
     init {
         val positionData = floatArrayOf(

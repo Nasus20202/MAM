@@ -1,8 +1,9 @@
 package dev.nasuta.mam.lab6.meshes
 
 /**
- * Coloured cube.
+ * @author Marek Kulawiak
  */
+// Coloured cube.
 class CubeMesh : BaseMesh() {
     init {
         val positionData = floatArrayOf(

@@ -4,6 +4,9 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 
+/**
+ * @author Marek Kulawiak
+ */
 // Base class for meshes.
 abstract class BaseMesh {
     private val BYTES_PER_FLOAT: Int = 4

@@ -1,5 +1,8 @@
 precision mediump float;
 
+uniform vec3 lightPosition;
+uniform vec4 lightColour;
+
 // Variables passed from the vertex shader.
 varying vec4 interpolatedColour;
 
